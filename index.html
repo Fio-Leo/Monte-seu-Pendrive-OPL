@@ -136,7 +136,7 @@
         .view-toggle {
             display: flex;
             gap: 10px;
-            flex: 1; /* ADICIONE APENAS ESTA LINHA */
+            flex: 1;
         }
 
         .view-btn {
@@ -153,8 +153,7 @@
             align-items: center;
             justify-content: center;
             gap: 8px;
-            flex: 1; /* MUDE PARA flex: 1 */
-            /* Remova ou comente: min-width: 200px; */
+            flex: 1;
         }
 
         .view-btn:hover {
@@ -212,6 +211,58 @@
 
         .clear-btn:hover {
             background: linear-gradient(45deg, #cc0000, #990000);
+        }
+
+        /* Aviso sobre jogos modificados - COMPACTO */
+        .modified-warning {
+            background: rgba(255, 193, 7, 0.1);
+            border: 1px solid rgba(255, 193, 7, 0.3);
+            border-radius: 8px;
+            padding: 8px 12px;
+            margin: 0 auto 15px auto;
+            text-align: center;
+            width: 100%;
+        }
+
+        .warning-icon {
+            font-size: 1.2em;
+            margin-bottom: 6px;
+        }
+
+        .warning-content {
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .warning-content strong {
+            color: #ffc107;
+            display: block;
+            margin-bottom: 6px;
+            font-size: 0.9em;
+            line-height: 1.2;
+        }
+
+        .warning-content p {
+            margin-bottom: 8px;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.85em;
+            line-height: 1.3;
+        }
+
+        .warning-points {
+            margin-top: 8px;
+            text-align: center;
+        }
+
+        .warning-point {
+            background: rgba(255, 193, 7, 0.15);
+            padding: 6px 10px;
+            border-radius: 5px;
+            margin: 6px auto;
+            max-width: 650px;
+            width: 100%;
+            text-align: left;
+            font-size: 0.8em;
+            line-height: 1.3;
         }
 
         /* Vista de lista */
@@ -336,7 +387,7 @@
             font-weight: bold;
         }
 
-        /* Aviso */
+        /* Aviso de limite */
         .warning {
             text-align: center;
             padding: 15px;
@@ -447,6 +498,33 @@
                 flex-direction: row;
             }
             
+            .modified-warning {
+                padding: 6px 8px;
+            }
+            
+            .warning-icon {
+                font-size: 1em;
+            }
+            
+            .warning-content strong {
+                font-size: 0.8em;
+                margin-bottom: 4px;
+            }
+            
+            .warning-content p {
+                font-size: 0.75em;
+                margin-bottom: 6px;
+            }
+            
+            .warning-point {
+                padding: 4px 8px;
+                margin: 4px auto;
+                font-size: 0.7em;
+                text-align: center;
+                border-left: none;
+                border-top: 2px solid #ffc107;
+            }
+            
             .covers-view {
                 grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
             }
@@ -469,6 +547,25 @@
             
             .cover-img {
                 height: 180px;
+            }
+            
+            .modified-warning {
+                padding: 4px 6px;
+            }
+            
+            .warning-icon {
+                font-size: 0.9em;
+                margin-bottom: 4px;
+            }
+            
+            .warning-content strong {
+                font-size: 0.75em;
+            }
+            
+            .warning-point {
+                padding: 3px 6px;
+                margin: 3px auto;
+                font-size: 0.65em;
             }
         }
     </style>
@@ -539,6 +636,21 @@
             <button class="action-btn clear-btn" onclick="clearList()">
                 🗑️ Limpar Lista
             </button>
+        </div>
+
+        <!-- Aviso sobre jogos modificados - ADICIONADO AQUI -->
+        <div class="modified-warning">
+            <div class="warning-icon">⚠️</div>
+            <div class="warning-content">
+                <strong>AVISO IMPORTANTE SOBRE JOGOS MODIFICADOS (TRADUZIDOS/HACKS):</strong>
+                <p>Ao selecionar jogos não-originais (traduzidos para PT-BR, patches, versões alternativas), esteja ciente de que:</p>
+                
+                <div class="warning-points">
+                    <div class="warning-point">
+                        O desempenho não é garantido e pode variar conforme o modelo e estado do seu PlayStation 2. Alguns jogos modificados podem apresentar bugs, travamentos ou problemas de compatibilidade.
+                    </div>
+                </div>
+            </div>
         </div>
 
         <div class="warning" id="warning"></div>
