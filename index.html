@@ -574,7 +574,7 @@
     <div class="container">
         <header>
             <h1>🎮 Monte seu Pendrive OPL</h1>
-            <p class="subtitle">Limite: 57GB • Selecione seus jogos favoritos</p> <!-- ALTERADO: 58GB para 57GB -->
+            <p class="subtitle">Limite: 57GB • Selecione seus jogos favoritos</p>
         </header>
 
         <div class="card">
@@ -586,7 +586,7 @@
             <div class="stats">
                 <span><b id="count">0</b> jogos selecionados</span>
                 <span><b id="used">0</b> GB usados</span>
-                <span><b id="remaining">57</b> GB livres</span> <!-- ALTERADO: 58 para 57 -->
+                <span><b id="remaining">57</b> GB livres</span>
             </div>
         </div>
 
@@ -624,8 +624,8 @@
             </div>
             
             <div class="view-toggle">
-                <button class="view-btn" onclick="setView('list')">📋 Lista</button> <!-- REMOVIDO: active -->
-                <button class="view-btn active" onclick="setView('covers')">🖼️ Capas</button> <!-- MANTIDO: active -->
+                <button class="view-btn" onclick="setView('list')">📋 Lista</button>
+                <button class="view-btn active" onclick="setView('covers')">🖼️ Capas</button>
             </div>
         </div>
 
@@ -638,7 +638,7 @@
             </button>
         </div>
 
-        <!-- Aviso sobre jogos modificados - ADICIONADO AQUI -->
+        <!-- Aviso sobre jogos modificados -->
         <div class="modified-warning">
             <div class="warning-icon">⚠️</div>
             <div class="warning-content">
@@ -676,10 +676,11 @@
     </div>
 
     <script>
-        const TOTAL_LIMIT = 57; // ALTERADO: Limite de espaço em GB - 58 para 57
-        const GAMES_JSON_URL = 'https://raw.githubusercontent.com/leoead/testeOPL/main/games.json';
+        const TOTAL_LIMIT = 57;
+        const GAMES_JSON_URL = 'https://raw.githubusercontent.com/Fio-Leo/Monte-seu-Pendrive-OPL/main/games.json';
+        const COVERS_BASE_URL = 'https://raw.githubusercontent.com/Fio-Leo/Monte-seu-Pendrive-OPL/main/covers/';
         
-        let currentView = 'covers'; // ALTERADO: 'list' para 'covers'
+        let currentView = 'covers';
         let selectedGames = new Set();
         let gamesWithIds = [];
         let allGenres = new Set();
@@ -708,37 +709,58 @@
         // ===== CARREGAR JOGOS DO ARQUIVO EXTERNO =====
         async function loadGames() {
             try {
+                console.log("🔄 Iniciando carregamento de jogos do GitHub...");
+                
                 // Mostrar loading
                 loadingDiv.style.display = "block";
                 errorDiv.style.display = "none";
                 controlsDiv.style.display = "none";
                 actionButtonsDiv.style.display = "none";
                 
-                // Fazer requisição para o arquivo JSON NO SEU GITHUB
-                const response = await fetch(GAMES_JSON_URL);
+                // Fazer requisição com cache busting agressivo
+                const timestamp = Date.now();
+                const random = Math.random().toString(36).substring(7);
+                const response = await fetch(`${GAMES_JSON_URL}?t=${timestamp}&r=${random}&force=${Date.now()}`);
                 
                 if (!response.ok) {
                     throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 }
                 
-                const data = await response.json();
-                console.log("Dados carregados do GitHub:", data);
+                let data = await response.json();
+                console.log("✅ JSON carregado do seu repositório:", data.length, "jogos");
                 
-                // Processar os dados - ASSUMINDO QUE É UM ARRAY DE ARRAYS
-                // Formato: [["Título", tamanho, "ID", "Gênero"], ...]
+                // ⭐⭐ VERIFICAR E FILTRAR JOGOS PROBLEMÁTICOS ⭐⭐
+                const problematicGames = data.filter(game => {
+                    const title = game[0] || '';
+                    return title.includes("Gran Turismo") || title.includes("Tourist Trophy");
+                });
+                
+                if (problematicGames.length > 0) {
+                    console.warn("⚠️ Jogos problemáticos encontrados:", problematicGames);
+                    console.log("🔄 Filtrando jogos problemáticos...");
+                    
+                    // Filtrar os jogos problemáticos
+                    data = data.filter(game => {
+                        const title = game[0] || '';
+                        return !(title.includes("Gran Turismo") || title.includes("Tourist Trophy"));
+                    });
+                    
+                    console.log(`✅ ${problematicGames.length} jogos removidos. Total agora: ${data.length} jogos`);
+                } else {
+                    console.log("✅ Nenhum jogo problemático encontrado");
+                }
+                
+                // Substituir completamente o array
                 gamesWithIds = data;
                 
                 if (!Array.isArray(gamesWithIds) || gamesWithIds.length === 0) {
                     throw new Error("Formato de dados inválido ou lista vazia");
                 }
                 
-                // Verificar formato dos dados
-                console.log("Primeiros jogos:", gamesWithIds.slice(0, 3));
-                
                 // Extrair todos os gêneros únicos
                 allGenres.clear();
                 gamesWithIds.forEach(game => {
-                    if (game[3]) { // game[3] é o gênero
+                    if (game[3]) {
                         allGenres.add(game[3]);
                     }
                 });
@@ -755,17 +777,19 @@
                 actionButtonsDiv.style.display = "flex";
                 
                 // Inicializar a interface - ABRIR EM CAPAS
-                setView('covers'); // ALTERADO: 'list' para 'covers'
+                setView('covers');
                 update();
                 
+                console.log("✅ Interface carregada com sucesso!");
+                
             } catch (error) {
-                console.error("Erro ao carregar jogos:", error);
+                console.error("❌ Erro ao carregar jogos:", error);
                 loadingDiv.style.display = "none";
                 errorDiv.style.display = "block";
                 errorDiv.innerHTML = `
                     <h3>⚠ Erro ao carregar jogos</h3>
                     <p>${error.message}</p>
-                    <p>Verifique se o arquivo <code>games.json</code> existe no GitHub.</p>
+                    <p>Verifique se o arquivo <code>games.json</code> existe no seu repositório GitHub.</p>
                     <p>URL: ${GAMES_JSON_URL}</p>
                     <p><a href="#" onclick="loadGames()">Tentar novamente</a></p>
                 `;
@@ -815,8 +839,18 @@
         }
 
         function getCoverUrl(gameId) {
-            // URL CORRIGIDA para as capas no seu GitHub
-            return `https://raw.githubusercontent.com/leoead/testeOPL/main/covers/${gameId}_COV.png`;
+            // Corrigir o nome do arquivo da capa
+            let cleanId = gameId;
+            // Remover extensão se existir
+            cleanId = cleanId.replace('.png', '').replace('.jpg', '').replace('.jpeg', '');
+            // Garantir que termina com _COV
+            if (!cleanId.endsWith('_COV')) {
+                cleanId = cleanId + '_COV';
+            }
+            // Adicionar extensão .png
+            cleanId = cleanId + '.png';
+            
+            return COVERS_BASE_URL + cleanId;
         }
 
         // ===== DEFINIR VISTA =====
@@ -923,15 +957,27 @@
                 coverItem.onclick = () => toggleGame(id, size, !isSelected);
                 coverItem.ondblclick = () => showCover(coverUrl, title, size, genre);
                 
-                coverItem.innerHTML = `
-                    <img src="${coverUrl}" class="cover-img" alt="${escapeHTML(title)}" 
-                         onerror="this.onerror=null; this.src='https://via.placeholder.com/300x400/1a4fa3/ffffff?text=Capa+Não+Encontrada'">
-                    <div class="cover-content">
-                        <div class="cover-title">${escapeHTML(title)}</div>
-                        <div class="cover-genre">${escapeHTML(genre)}</div>
-                        <div class="cover-size">${gameGB} GB</div>
-                    </div>
+                // Criar elemento de imagem com tratamento de erro
+                const img = document.createElement('img');
+                img.className = 'cover-img';
+                img.alt = escapeHTML(title);
+                img.src = coverUrl;
+                img.onerror = function() {
+                    // Se a capa não for encontrada, usar placeholder
+                    this.src = 'https://via.placeholder.com/300x400/1a4fa3/ffffff?text=Capa+Não+Encontrada';
+                    this.onerror = null; // Prevenir loop infinito
+                };
+                
+                const coverContent = document.createElement('div');
+                coverContent.className = 'cover-content';
+                coverContent.innerHTML = `
+                    <div class="cover-title">${escapeHTML(title)}</div>
+                    <div class="cover-genre">${escapeHTML(genre)}</div>
+                    <div class="cover-size">${gameGB} GB</div>
                 `;
+                
+                coverItem.appendChild(img);
+                coverItem.appendChild(coverContent);
                 coversView.appendChild(coverItem);
             });
         }
@@ -993,140 +1039,4 @@
                 warning.className = "warning";
                 warning.style.display = "block";
             } else if (usedGB > TOTAL_LIMIT * 0.9) {
-                warning.textContent = `⚠ ATENÇÃO: Aproximando do limite (${usedGB.toFixed(2)}/${TOTAL_LIMIT} GB)`;
-                warning.className = "warning near-limit";
-                warning.style.display = "block";
-            } else {
-                warning.style.display = "none";
-            }
-            
-            // Atualizar interface
-            usedSpan.textContent = usedGB.toFixed(2);
-            remSpan.textContent = remainingGB.toFixed(2);
-            countSpan.textContent = totalCount;
-            
-            const progressPercent = Math.min(usedGB / TOTAL_LIMIT * 100, 100);
-            progress.style.width = progressPercent + "%";
-            
-            // Cor da barra de progresso
-            if (isLimitReached) {
-                progress.className = "progress limit-exceeded";
-            } else if (usedGB > TOTAL_LIMIT * 0.9) {
-                progress.className = "progress near-limit";
-            } else {
-                progress.className = "progress";
-            }
-        }
-
-        // ===== MODAL DA CAPA =====
-        function showCover(coverUrl, title, size, genre) {
-            modalImage.src = coverUrl;
-            modalTitle.textContent = title;
-            modalSize.textContent = `Tamanho: ${gb(size).toFixed(2)} GB`;
-            modalGenre.textContent = `Gênero: ${genre}`;
-            modal.style.display = "block";
-        }
-
-        function closeModal() {
-            modal.style.display = "none";
-        }
-
-        // ===== LIMPAR LISTA =====
-        function clearList() {
-            if (selectedGames.size === 0) {
-                alert("A lista já está vazia!");
-                return;
-            }
-            
-            if (confirm(`Deseja realmente limpar toda a lista?\n\nVocê tem ${selectedGames.size} jogo(s) selecionado(s).`)) {
-                selectedGames.clear();
-                update();
-                applyFilters();
-                alert("✅ Lista limpa com sucesso!");
-            }
-        }
-
-        // ===== ENVIAR WHATSAPP =====
-        function sendWhats() {
-            if (selectedGames.size === 0) {
-                alert("Selecione ao menos um jogo");
-                return;
-            }
-            
-            const selectedTitles = [];
-            let totalSize = 0;
-            
-            gamesWithIds.forEach(g => {
-                const [title, size, id] = g;
-                if (selectedGames.has(id)) {
-                    selectedTitles.push(title);
-                    totalSize += size;
-                }
-            });
-            
-            const totalGB = gb(totalSize).toFixed(2);
-            const msg = `🎮 Lista de Jogos OPL:%0A%0A${selectedTitles.join("%0A")}%0A%0A📦 Total: ${selectedGames.size} jogos%0A💾 Espaço: ${totalGB} GB`;
-            window.open(`https://wa.me/?text=${msg}`, "_blank");
-        }
-
-        // ===== COPIAR PARA ÁREA DE TRANSFERÊNCIA =====
-        function copyToClipboard() {
-            if (selectedGames.size === 0) {
-                alert("Selecione ao menos um jogo para copiar");
-                return;
-            }
-            
-            const selectedTitles = [];
-            let totalSize = 0;
-            
-            gamesWithIds.forEach(g => {
-                const [title, size, id] = g;
-                if (selectedGames.has(id)) {
-                    selectedTitles.push(title);
-                    totalSize += size;
-                }
-            });
-            
-            const totalGB = gb(totalSize).toFixed(2);
-            const textToCopy = `🎮 Lista de Jogos OPL:\n\n${selectedTitles.join("\n")}\n\n📦 Total: ${selectedGames.size} jogos\n💾 Espaço: ${totalGB} GB`;
-            
-            navigator.clipboard.writeText(textToCopy)
-                .then(() => {
-                    alert("✅ Lista copiada para a área de transferência!\n\nCole em qualquer mensagem (WhatsApp, email, etc.)");
-                })
-                .catch(err => {
-                    const textArea = document.createElement("textarea");
-                    textArea.value = textToCopy;
-                    document.body.appendChild(textArea);
-                    textArea.select();
-                    document.execCommand('copy');
-                    document.body.removeChild(textArea);
-                    alert("✅ Lista copiada para a área de transferência!\n\nCole em qualquer mensagem (WhatsApp, email, etc.)");
-                });
-        }
-
-        // ===== ESCAPAR HTML PARA SEGURANÇA =====
-        function escapeHTML(text) {
-            if (!text) return '';
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-
-        // ===== FECHAR MODAL AO CLICAR FORA =====
-        window.onclick = function(event) {
-            if (event.target == modal) {
-                closeModal();
-            }
-        }
-
-        // ===== EVENT LISTENERS =====
-        search.addEventListener("input", () => applyFilters());
-        genreFilter.addEventListener("change", () => applyFilters());
-        sortFilter.addEventListener("change", () => applyFilters());
-
-        // ===== INICIALIZAÇÃO =====
-        loadGames();
-    </script>
-</body>
-</html>
+                warning.textContent =
