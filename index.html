@@ -574,7 +574,7 @@
     <div class="container">
         <header>
             <h1>🎮 Monte seu Pendrive OPL</h1>
-            <p class="subtitle">Limite: 58GB • Selecione seus jogos favoritos</p>
+            <p class="subtitle">Limite: 57GB • Selecione seus jogos favoritos</p> <!-- ALTERADO: 58GB para 57GB -->
         </header>
 
         <div class="card">
@@ -586,7 +586,7 @@
             <div class="stats">
                 <span><b id="count">0</b> jogos selecionados</span>
                 <span><b id="used">0</b> GB usados</span>
-                <span><b id="remaining">58</b> GB livres</span>
+                <span><b id="remaining">57</b> GB livres</span> <!-- ALTERADO: 58 para 57 -->
             </div>
         </div>
 
@@ -624,8 +624,8 @@
             </div>
             
             <div class="view-toggle">
-                <button class="view-btn active" onclick="setView('list')">📋 Lista</button>
-                <button class="view-btn" onclick="setView('covers')">🖼️ Capas</button>
+                <button class="view-btn" onclick="setView('list')">📋 Lista</button> <!-- REMOVIDO: active -->
+                <button class="view-btn active" onclick="setView('covers')">🖼️ Capas</button> <!-- MANTIDO: active -->
             </div>
         </div>
 
@@ -676,10 +676,10 @@
     </div>
 
     <script>
-        const TOTAL_LIMIT = 58; // Limite de espaço em GB
-        const GAMES_JSON_URL = 'games.json'; // URL do arquivo JSON externo
+        const TOTAL_LIMIT = 57; // ALTERADO: Limite de espaço em GB - 58 para 57
+        const GAMES_JSON_URL = 'https://raw.githubusercontent.com/leoead/testeOPL/main/games.json';
         
-        let currentView = 'list';
+        let currentView = 'covers'; // ALTERADO: 'list' para 'covers'
         let selectedGames = new Set();
         let gamesWithIds = [];
         let allGenres = new Set();
@@ -714,7 +714,7 @@
                 controlsDiv.style.display = "none";
                 actionButtonsDiv.style.display = "none";
                 
-                // Fazer requisição para o arquivo JSON
+                // Fazer requisição para o arquivo JSON NO SEU GITHUB
                 const response = await fetch(GAMES_JSON_URL);
                 
                 if (!response.ok) {
@@ -722,13 +722,18 @@
                 }
                 
                 const data = await response.json();
+                console.log("Dados carregados do GitHub:", data);
                 
-                // Processar os dados
-                gamesWithIds = data.games || data; // Suporta ambos os formatos
+                // Processar os dados - ASSUMINDO QUE É UM ARRAY DE ARRAYS
+                // Formato: [["Título", tamanho, "ID", "Gênero"], ...]
+                gamesWithIds = data;
                 
                 if (!Array.isArray(gamesWithIds) || gamesWithIds.length === 0) {
-                    throw new Error("Formato de dados inválido");
+                    throw new Error("Formato de dados inválido ou lista vazia");
                 }
+                
+                // Verificar formato dos dados
+                console.log("Primeiros jogos:", gamesWithIds.slice(0, 3));
                 
                 // Extrair todos os gêneros únicos
                 allGenres.clear();
@@ -749,14 +754,21 @@
                 controlsDiv.style.display = "flex";
                 actionButtonsDiv.style.display = "flex";
                 
-                // Inicializar a interface
-                setView('list');
+                // Inicializar a interface - ABRIR EM CAPAS
+                setView('covers'); // ALTERADO: 'list' para 'covers'
                 update();
                 
             } catch (error) {
                 console.error("Erro ao carregar jogos:", error);
                 loadingDiv.style.display = "none";
                 errorDiv.style.display = "block";
+                errorDiv.innerHTML = `
+                    <h3>⚠ Erro ao carregar jogos</h3>
+                    <p>${error.message}</p>
+                    <p>Verifique se o arquivo <code>games.json</code> existe no GitHub.</p>
+                    <p>URL: ${GAMES_JSON_URL}</p>
+                    <p><a href="#" onclick="loadGames()">Tentar novamente</a></p>
+                `;
             }
         }
 
@@ -765,7 +777,7 @@
             genreFilter.innerHTML = '<option value="all">🎭 Todos os Gêneros</option>';
             
             // Ordenar gêneros alfabeticamente
-            const sortedGenres = Array.from(allGenres).sort();
+            const sortedGenres = Array.from(allGenres).sort((a, b) => a.localeCompare(b, "pt-BR"));
             
             sortedGenres.forEach(genre => {
                 const option = document.createElement("option");
@@ -803,7 +815,8 @@
         }
 
         function getCoverUrl(gameId) {
-            return `covers/${gameId}_COV.png`;
+            // URL CORRIGIDA para as capas no seu GitHub
+            return `https://raw.githubusercontent.com/leoead/testeOPL/main/covers/${gameId}_COV.png`;
         }
 
         // ===== DEFINIR VISTA =====
@@ -1117,3 +1130,4 @@
     </script>
 </body>
 </html>
+
