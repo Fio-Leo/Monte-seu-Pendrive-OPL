@@ -1039,4 +1039,117 @@
                 warning.className = "warning";
                 warning.style.display = "block";
             } else if (usedGB > TOTAL_LIMIT * 0.9) {
-                warning.textContent =
+                warning.textContent = `⚠ ATENÇÃO: Aproximando do limite (${usedGB.toFixed(2)}/${TOTAL_LIMIT} GB)`;
+                warning.className = "warning near-limit";
+                warning.style.display = "block";
+            } else {
+                warning.style.display = "none";
+            }
+            
+            // Atualizar interface
+            usedSpan.textContent = usedGB.toFixed(2);
+            remSpan.textContent = remainingGB.toFixed(2);
+            countSpan.textContent = totalCount;
+            
+            const progressPercent = Math.min(usedGB / TOTAL_LIMIT * 100, 100);
+            progress.style.width = progressPercent + "%";
+            
+            // Cor da barra de progresso
+            if (isLimitReached) {
+                progress.className = "progress limit-exceeded";
+            } else if (usedGB > TOTAL_LIMIT * 0.9) {
+                progress.className = "progress near-limit";
+            } else {
+                progress.className = "progress";
+            }
+        }
+
+        // ===== MODAL DA CAPA =====
+        function showCover(coverUrl, title, size, genre) {
+            modalImage.src = coverUrl;
+            modalTitle.textContent = title;
+            modalSize.textContent = `Tamanho: ${gb(size).toFixed(2)} GB`;
+            modalGenre.textContent = `Gênero: ${genre}`;
+            modal.style.display = "block";
+        }
+
+        function closeModal() {
+            modal.style.display = "none";
+        }
+
+        // ===== LIMPAR LISTA =====
+        function clearList() {
+            if (selectedGames.size === 0) {
+                alert("A lista já está vazia!");
+                return;
+            }
+            
+            if (confirm(`Deseja realmente limpar toda a lista?\n\nVocê tem ${selectedGames.size} jogo(s) selecionado(s).`)) {
+                selectedGames.clear();
+                update();
+                applyFilters();
+                alert("✅ Lista limpa com sucesso!");
+            }
+        }
+
+        // ===== COPIAR PARA ÁREA DE TRANSFERÊNCIA =====
+        function copyToClipboard() {
+            if (selectedGames.size === 0) {
+                alert("Selecione ao menos um jogo para copiar");
+                return;
+            }
+            
+            const selectedTitles = [];
+            let totalSize = 0;
+            
+            gamesWithIds.forEach(g => {
+                const [title, size, id] = g;
+                if (selectedGames.has(id)) {
+                    selectedTitles.push(title);
+                    totalSize += size;
+                }
+            });
+            
+            const totalGB = gb(totalSize).toFixed(2);
+            const textToCopy = `🎮 Lista de Jogos OPL:\n\n${selectedTitles.join("\n")}\n\n📦 Total: ${selectedGames.size} jogos\n💾 Espaço: ${totalGB} GB`;
+            
+            navigator.clipboard.writeText(textToCopy)
+                .then(() => {
+                    alert("✅ Lista copiada para a área de transferência!\n\nCole em qualquer mensagem (WhatsApp, email, etc.)");
+                })
+                .catch(err => {
+                    const textArea = document.createElement("textarea");
+                    textArea.value = textToCopy;
+                    document.body.appendChild(textArea);
+                    textArea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textArea);
+                    alert("✅ Lista copiada para a área de transferência!\n\nCole em qualquer mensagem (WhatsApp, email, etc.)");
+                });
+        }
+
+        // ===== ESCAPAR HTML PARA SEGURANÇA =====
+        function escapeHTML(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // ===== FECHAR MODAL AO CLICAR FORA =====
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                closeModal();
+            }
+        }
+
+        // ===== EVENT LISTENERS =====
+        search.addEventListener("input", () => applyFilters());
+        genreFilter.addEventListener("change", () => applyFilters());
+        sortFilter.addEventListener("change", () => applyFilters());
+
+        // ===== INICIALIZAÇÃO =====
+        loadGames();
+    </script>
+</body>
+</html>
