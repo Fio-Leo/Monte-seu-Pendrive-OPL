@@ -677,11 +677,11 @@
 
     <script>
         const TOTAL_LIMIT = 57;
-        const GAMES_JSON_URL = 'https://raw.githubusercontent.com/leoead/testeOPL/main/games.json?force-reload=' + Math.random().toString(36).substring(7);
+        const GAMES_JSON_URL = 'https://raw.githubusercontent.com/leoead/testeOPL/main/games.json?force=' + Date.now();
         
         let currentView = 'covers';
         let selectedGames = new Set();
-        let gamesWithIds = []; // ⭐⭐ DEIXE APENAS ISSO - NÃO ADICIONE JOGOS AQUI ⭐⭐
+        let gamesWithIds = [];
         let allGenres = new Set();
 
         // Elementos DOM
@@ -707,93 +707,93 @@
 
         // ===== CARREGAR JOGOS DO ARQUIVO EXTERNO =====
         async function loadGames() {
-    try {
-        console.log("🔄 Iniciando carregamento de jogos...");
-        
-        // Mostrar loading
-        loadingDiv.style.display = "block";
-        errorDiv.style.display = "none";
-        controlsDiv.style.display = "none";
-        actionButtonsDiv.style.display = "none";
-        
-        // URL com cache busting agressivo
-        const GAMES_JSON_URL = 'https://raw.githubusercontent.com/leoead/testeOPL/main/games.json?nocache=' + Date.now() + '&r=' + Math.random();
-        const response = await fetch(GAMES_JSON_URL);
-        
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-        
-        let gamesWithIds = await response.json();
-        console.log("✅ JSON carregado:", gamesWithIds.length, "jogos");
-        
-        // ⭐⭐ FILTRO FORÇADO DOS JOGOS PROBLEMÁTICOS ⭐⭐
-        const originalCount = gamesWithIds.length;
-        gamesWithIds = gamesWithIds.filter(game => {
-            const title = game[0] || '';
-            // Remover QUALQUER jogo que contenha estas palavras
-            const toRemove = title.includes("Gran Turismo") || 
-                             title.includes("Tourist Trophy") ||
-                             title.includes("Gran Turismo 3") ||
-                             title.includes("Gran Turismo 4");
-            
-            if (toRemove) {
-                console.warn(`🚫 REMOVIDO FORÇADAMENTE: ${title}`);
-                return false;
+            try {
+                console.log("🔄 Iniciando carregamento de jogos do GitHub...");
+                
+                // Mostrar loading
+                loadingDiv.style.display = "block";
+                errorDiv.style.display = "none";
+                controlsDiv.style.display = "none";
+                actionButtonsDiv.style.display = "none";
+                
+                // Fazer requisição com cache busting agressivo
+                const timestamp = Date.now();
+                const random = Math.random().toString(36).substring(7);
+                const response = await fetch(`${GAMES_JSON_URL}&t=${timestamp}&r=${random}`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                let data = await response.json();
+                console.log("✅ JSON carregado:", data.length, "jogos");
+                
+                // ⭐⭐ FILTRO FORÇADO DOS JOGOS PROBLEMÁTICOS ⭐⭐
+                const originalCount = data.length;
+                data = data.filter(game => {
+                    const title = game[0] || '';
+                    // Remover QUALQUER jogo que contenha estas palavras
+                    const toRemove = title.includes("Gran Turismo") || 
+                                     title.includes("Tourist Trophy");
+                    
+                    if (toRemove) {
+                        console.warn(`🚫 REMOVIDO: ${title}`);
+                        return false;
+                    }
+                    return true;
+                });
+                
+                const removedCount = originalCount - data.length;
+                if (removedCount > 0) {
+                    console.log(`✅ ${removedCount} jogos problemáticos removidos`);
+                    console.log(`✅ Total final: ${data.length} jogos`);
+                }
+                
+                // Substituir completamente o array
+                gamesWithIds = data;
+                
+                if (!Array.isArray(gamesWithIds) || gamesWithIds.length === 0) {
+                    throw new Error("Formato de dados inválido ou lista vazia");
+                }
+                
+                // Extrair todos os gêneros únicos
+                allGenres.clear();
+                gamesWithIds.forEach(game => {
+                    if (game[3]) {
+                        allGenres.add(game[3]);
+                    }
+                });
+                
+                // Ordenar alfabeticamente inicialmente
+                gamesWithIds.sort((a, b) => a[0].localeCompare(b[0], "pt-BR"));
+                
+                // Preencher o filtro de gêneros
+                populateGenreFilter();
+                
+                // Esconder loading e mostrar controles
+                loadingDiv.style.display = "none";
+                controlsDiv.style.display = "flex";
+                actionButtonsDiv.style.display = "flex";
+                
+                // Inicializar a interface - ABRIR EM CAPAS
+                setView('covers');
+                update();
+                
+                console.log("✅ Interface carregada com sucesso!");
+                
+            } catch (error) {
+                console.error("❌ Erro ao carregar jogos:", error);
+                loadingDiv.style.display = "none";
+                errorDiv.style.display = "block";
+                errorDiv.innerHTML = `
+                    <h3>⚠ Erro ao carregar jogos</h3>
+                    <p>${error.message}</p>
+                    <p>Verifique se o arquivo <code>games.json</code> existe no GitHub.</p>
+                    <p>URL: ${GAMES_JSON_URL}</p>
+                    <p><a href="#" onclick="loadGames()">Tentar novamente</a></p>
+                `;
             }
-            return true;
-        });
-        
-        const removedCount = originalCount - gamesWithIds.length;
-        if (removedCount > 0) {
-            console.log(`✅ ${removedCount} jogos problemáticos removidos forçadamente`);
-            console.log(`✅ Total final: ${gamesWithIds.length} jogos`);
         }
-        
-        if (!Array.isArray(gamesWithIds) || gamesWithIds.length === 0) {
-            throw new Error("Formato de dados inválido ou lista vazia");
-        }
-        
-        // Armazenar globalmente
-        window.gamesWithIds = gamesWithIds;
-        
-        // Extrair todos os gêneros únicos
-        allGenres.clear();
-        gamesWithIds.forEach(game => {
-            if (game[3]) {
-                allGenres.add(game[3]);
-            }
-        });
-        
-        // Ordenar alfabeticamente inicialmente
-        gamesWithIds.sort((a, b) => a[0].localeCompare(b[0], "pt-BR"));
-        
-        // Preencher o filtro de gêneros
-        populateGenreFilter();
-        
-        // Esconder loading e mostrar controles
-        loadingDiv.style.display = "none";
-        controlsDiv.style.display = "flex";
-        actionButtonsDiv.style.display = "flex";
-        
-        // Inicializar a interface
-        setView('covers');
-        update();
-        
-        console.log("✅ Interface carregada com sucesso!");
-        
-    } catch (error) {
-        console.error("❌ Erro ao carregar jogos:", error);
-        loadingDiv.style.display = "none";
-        errorDiv.style.display = "block";
-        errorDiv.innerHTML = `
-            <h3>⚠ Erro ao carregar jogos</h3>
-            <p>${error.message}</p>
-            <p>Verifique se o arquivo <code>games.json</code> existe no GitHub.</p>
-            <p><a href="#" onclick="loadGames()">Tentar novamente</a></p>
-        `;
-    }
-}
 
         // ===== PREENCHER FILTRO DE GÊNEROS =====
         function populateGenreFilter() {
