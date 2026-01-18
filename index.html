@@ -677,7 +677,7 @@
 
     <script>
         const TOTAL_LIMIT = 57;
-        const GAMES_JSON_URL = 'https://raw.githubusercontent.com/leoead/testeOPL/main/games.json?v=' + Date.now();
+        const GAMES_JSON_URL = 'https://raw.githubusercontent.com/leoead/testeOPL/main/games.json?force-reload=' + Math.random().toString(36).substring(7);
         
         let currentView = 'covers';
         let selectedGames = new Set();
