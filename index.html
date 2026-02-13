@@ -568,6 +568,16 @@
                 font-size: 0.65em;
             }
         }
+
+        /* Estilo para exibir código do jogo na visualização */
+        .game-code {
+            font-size: 0.75em;
+            color: #fc00ff;
+            background: rgba(252, 0, 255, 0.1);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: monospace;
+        }
     </style>
 </head>
 <body>
@@ -671,6 +681,7 @@
                 <h3 id="modalTitle" class="modal-title"></h3>
                 <div id="modalSize" class="modal-details"></div>
                 <div id="modalGenre" class="modal-details"></div>
+                <div id="modalCode" class="modal-details" style="color: #fc00ff; margin-top: 5px;"></div>
             </div>
         </div>
     </div>
@@ -705,6 +716,7 @@
         const modalTitle = document.getElementById("modalTitle");
         const modalSize = document.getElementById("modalSize");
         const modalGenre = document.getElementById("modalGenre");
+        const modalCode = document.getElementById("modalCode");
 
         // ===== CARREGAR JOGOS DO ARQUIVO EXTERNO =====
         async function loadGames() {
@@ -930,6 +942,7 @@
                                onchange="toggleGame('${id}', ${size}, this.checked)">
                         <span class="game-title">${escapeHTML(title)}</span>
                         <span class="game-genre">${escapeHTML(genre)}</span>
+                        <span class="game-code">${escapeHTML(id)}</span>
                     </div>
                     <span class="game-size">${gameGB} GB</span>
                 `;
@@ -955,7 +968,7 @@
                 const coverItem = document.createElement("div");
                 coverItem.className = `cover-item ${isSelected ? 'selected' : ''}`;
                 coverItem.onclick = () => toggleGame(id, size, !isSelected);
-                coverItem.ondblclick = () => showCover(coverUrl, title, size, genre);
+                coverItem.ondblclick = () => showCover(coverUrl, title, size, genre, id);
                 
                 // Criar elemento de imagem com tratamento de erro
                 const img = document.createElement('img');
@@ -974,6 +987,7 @@
                     <div class="cover-title">${escapeHTML(title)}</div>
                     <div class="cover-genre">${escapeHTML(genre)}</div>
                     <div class="cover-size">${gameGB} GB</div>
+                    <div class="game-code" style="margin-top: 5px; font-size: 0.7em;">${escapeHTML(id)}</div>
                 `;
                 
                 coverItem.appendChild(img);
@@ -1065,11 +1079,12 @@
         }
 
         // ===== MODAL DA CAPA =====
-        function showCover(coverUrl, title, size, genre) {
+        function showCover(coverUrl, title, size, genre, gameId) {
             modalImage.src = coverUrl;
             modalTitle.textContent = title;
             modalSize.textContent = `Tamanho: ${gb(size).toFixed(2)} GB`;
             modalGenre.textContent = `Gênero: ${genre}`;
+            modalCode.textContent = `Código: ${gameId}`;
             modal.style.display = "block";
         }
 
@@ -1092,30 +1107,40 @@
             }
         }
 
-        // ===== COPIAR PARA ÁREA DE TRANSFERÊNCIA =====
+        // ===== COPIAR PARA ÁREA DE TRANSFERÊNCIA - MODIFICADO =====
         function copyToClipboard() {
             if (selectedGames.size === 0) {
                 alert("Selecione ao menos um jogo para copiar");
                 return;
             }
             
-            const selectedTitles = [];
+            const selectedItems = [];
             let totalSize = 0;
             
+            // Ordenar os jogos selecionados por nome
+            const selectedGamesArray = [];
             gamesWithIds.forEach(g => {
                 const [title, size, id] = g;
                 if (selectedGames.has(id)) {
-                    selectedTitles.push(title);
+                    selectedGamesArray.push({title, size, id});
                     totalSize += size;
                 }
             });
             
+            // Ordenar alfabeticamente
+            selectedGamesArray.sort((a, b) => a.title.localeCompare(b.title, "pt-BR"));
+            
+            // Formatar cada linha com nome do jogo e código
+            selectedGamesArray.forEach(game => {
+                selectedItems.push(`${game.title}, ${game.id}`);
+            });
+            
             const totalGB = gb(totalSize).toFixed(2);
-            const textToCopy = `🎮 Lista de Jogos OPL:\n\n${selectedTitles.join("\n")}\n\n📦 Total: ${selectedGames.size} jogos\n💾 Espaço: ${totalGB} GB`;
+            const textToCopy = `🎮 Lista de Jogos OPL:\n\n${selectedItems.join("\n")}\n\n📦 Total: ${selectedGames.size} jogos\n💾 Espaço: ${totalGB} GB`;
             
             navigator.clipboard.writeText(textToCopy)
                 .then(() => {
-                    alert("✅ Lista copiada para a área de transferência!\n\nCole em qualquer mensagem (WhatsApp, email, etc.)");
+                    alert("✅ Lista copiada para a área de transferência!\n\nFormato: Nome do Jogo, CÓDIGO\n\nCole em qualquer mensagem (WhatsApp, email, etc.)");
                 })
                 .catch(err => {
                     const textArea = document.createElement("textarea");
@@ -1124,7 +1149,7 @@
                     textArea.select();
                     document.execCommand('copy');
                     document.body.removeChild(textArea);
-                    alert("✅ Lista copiada para a área de transferência!\n\nCole em qualquer mensagem (WhatsApp, email, etc.)");
+                    alert("✅ Lista copiada para a área de transferência!\n\nFormato: Nome do Jogo, CÓDIGO\n\nCole em qualquer mensagem (WhatsApp, email, etc.)");
                 });
         }
 
